@@ -132,7 +132,7 @@ sudo losetup -d "$LOOP_DEVICE" || cleanup_and_exit "Failed to detach loop device
 # Archive the Disk Image File into a xz archive
 print_ok "Creating xz archive..."
 MODIFIED_IMG_XZ="$CURRENT_DIR/${FILENAME%.img.xz}-modified.img.xz"
-xz -vvv -z -c "$TMP_DIR/${FILENAME%.xz}" > "$MODIFIED_IMG_XZ" || cleanup_and_exit "Failed to create xz archive"
+xz -v -z -c "$TMP_DIR/${FILENAME%.xz}" > "$MODIFIED_IMG_XZ" || cleanup_and_exit "Failed to create xz archive"
 
 # Clean up
 rm -rf "$TMP_DIR"
