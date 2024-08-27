@@ -58,6 +58,15 @@ CURRENT_DIR=$(pwd)
 # Function to clean up and exit on error
 cleanup_and_exit() {
   echo -e "\e[31mError: $1\e[0m"
+  
+  if [ ! -z "${MOUNT_DIR+x}" ]; then
+    sudo umount "$MOUNT_DIR"
+  fi
+
+  if [ ! -z "${LOOP_DEVICE+x}" ]; then
+    sudo losetup -d "$LOOP_DEVICE"
+  fi
+  
   rm -rf "$TMP_DIR"
   exit 1
 }
