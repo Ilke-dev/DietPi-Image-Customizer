@@ -19,6 +19,8 @@ This script customizes a DietPi image by modifying its configuration files (`die
 ./edit_img.sh -t /path/to/dietpi.txt -w /path/to/dietpi-wifi.txt -i /path/to/dietpi.img.xz
 ```
 
+[![Demo with URL download](https://asciinema.org/a/NGIFjNhs4suD1DKgbhgTJmwMD.svg)](https://asciinema.org/a/NGIFjNhs4suD1DKgbhgTJmwMD)
+
 ## Description
 - Help Message: Displays usage information.
 - Argument Parsing: Parses command-line arguments to get paths to the dietpi.txt, dietpi-wifi.txt, and dietpi.img.xz files.
