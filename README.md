@@ -15,7 +15,7 @@ This script customizes a DietPi image by modifying its configuration files (`die
 -c cmdline.txt                      Path to the cmdline.txt file (optional).  
 -s Automation_Custom_Script.sh      Path to the Automation_Custom_Script.sh file (optional).  
 -p Automation_Custom_PreScript.sh   Path to the Automation_Custom_PreScript.sh file (optional).  
--f ./custom-files/                  Path to the directory containing additional custom files (optional, warning: only +-70Mb of space available in image).  
+-f ./custom-files/                  Path to the directory containing additional custom files (optional, image will be auto-resized to fit).  
 -i dietpi.img.xz                    Path or URL to the dietpi.img.xz file (required).  
 
 ## Example
@@ -45,6 +45,9 @@ This script customizes a DietPi image by modifying its configuration files (`die
 - losetup
 - mount
 - lsblk
+- sfdisk (required when using `-f`, part of util-linux)
+- e2fsck (required when using `-f`, part of e2fsprogs)
+- resize2fs (required when using `-f`, part of e2fsprogs)
 
 ## Error Handling
 The script includes error handling to clean up temporary files and directories if any step fails. It prints error messages in red and success messages in green.
