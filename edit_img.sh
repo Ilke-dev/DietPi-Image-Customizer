@@ -11,7 +11,7 @@ show_help() {
   echo "  -c cmdline.txt                        Path to the cmdline.txt file (optional)"
   echo "  -s Automation_Custom_Script.sh        Path to the Automation_Custom_Script.sh file (optional)"
   echo "  -p Automation_Custom_PreScript.sh     Path to the Automation_Custom_PreScript.sh file (optional)"
-  echo "  -f ./custom-files/                    Path to the directory containing additional custom files (optional, warning: only +-70Mb of space available in image)"
+  echo "  -f ./custom-files/                    Path to the directory containing additional custom files (optional, image will be auto-resized to fit)"
   echo "  -i dietpi.img.xz                      Path or URL to the dietpi.img.xz file"
 }
 
@@ -133,6 +133,23 @@ fi
 print_ok "Unpacking xz archive..."
 xz -d -k -c "$DIETPI_IMG_XZ" > "$TMP_DIR/${FILENAME%.xz}" || cleanup_and_exit "Failed to unpack xz archive"
 
+# Expand image to fit custom files if needed
+if [ -n "$FILES_DIR" ]; then
+    for tool in sfdisk e2fsck resize2fs; do
+        command -v "$tool" > /dev/null 2>&1 || cleanup_and_exit "Required tool '$tool' not found (install e2fsprogs and util-linux)"
+    done
+
+    FILES_SIZE=$(du -sb "$FILES_DIR" | awk '{print $1}')
+    EXTRA_MB=$(( (FILES_SIZE * 3 / 2 / 1048576) + 1 ))
+    [ "$EXTRA_MB" -lt 10 ] && EXTRA_MB=10
+
+    print_ok "Expanding image by ${EXTRA_MB}MB to fit custom files..."
+    truncate -s "+${EXTRA_MB}M" "$TMP_DIR/${FILENAME%.xz}" || cleanup_and_exit "Failed to expand image"
+
+    print_ok "Resizing root partition..."
+    echo ", +" | sfdisk -N 2 "$TMP_DIR/${FILENAME%.xz}" > /dev/null || cleanup_and_exit "Failed to resize partition"
+fi
+
 # Mount the Disk Image File to a unique /tmp folder
 print_ok "Mounting image..."
 sudo losetup -f -P "$TMP_DIR/${FILENAME%.xz}" || cleanup_and_exit "Failed to set up loop device"
@@ -142,6 +159,14 @@ lsblk --raw --output "NAME,MAJ:MIN" --noheadings $LOOP_DEVICE | tail -n +2 | whi
   MIN=$(echo $node | cut -d: -f2)
   [ ! -e "/dev/$dev" ] &&  mknod "/dev/$dev" b $MAJ $MIN
 done
+
+# Resize filesystem if image was expanded
+if [ -n "$FILES_DIR" ]; then
+    print_ok "Resizing root filesystem..."
+    sudo e2fsck -f -p "${LOOP_DEVICE}p2" > /dev/null 2>&1 || true
+    sudo resize2fs "${LOOP_DEVICE}p2" > /dev/null 2>&1 || cleanup_and_exit "Failed to resize filesystem"
+fi
+
 MOUNT_BOOT_DIR=$(mktemp -d)
 MOUNT_FS_DIR=$(mktemp -d)
 sudo mount "${LOOP_DEVICE}p1" "$MOUNT_BOOT_DIR" || cleanup_and_exit "Failed to mount boot image"
